@@ -127,6 +127,14 @@ export async function handler (
           prefix: opts.workspaceDir,
         })
       }
+      await Promise.all(allProjects.map(async project => {
+        const versionsByPackageNames = {}
+        const yarnPackgeLockFile = await readYarnLockFile(project.dir)
+        getAllVersionsFromYarnLockFile(yarnPackgeLockFile, versionsByPackageNames)
+        const projectPreferredVersions = getPreferredVersions(versionsByPackageNames)
+        project.preferredVersions = projectPreferredVersions
+      }))
+
       await recursive(allProjects,
         params,
         // @ts-expect-error

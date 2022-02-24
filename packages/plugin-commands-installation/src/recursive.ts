@@ -146,17 +146,20 @@ export default async function recursive (
   const memReadLocalConfig = mem(readLocalConfig)
 
   async function getImporters () {
-    const importers = [] as Array<{ buildIndex: number, manifest: ProjectManifest, rootDir: string }>
+    const importers = [] as Array<{ buildIndex: number, manifest: ProjectManifest, rootDir: string, preferredVersions: any }>
     await Promise.all(chunks.map(async (prefixes: string[], buildIndex) => {
       if (opts.ignoredPackages != null) {
         prefixes = prefixes.filter((prefix) => !opts.ignoredPackages!.has(prefix))
       }
       return Promise.all(
         prefixes.map(async (prefix) => {
+          const proj = allProjects.find(project => project.dir === prefix)
+
           importers.push({
             buildIndex,
             manifest: manifestsByPath[prefix].manifest,
             rootDir: prefix,
+            preferredVersions: proj!.preferredVersions,
           })
         })
       )
@@ -194,7 +197,7 @@ export default async function recursive (
     }
     const writeProjectManifests = [] as Array<(manifest: ProjectManifest) => Promise<void>>
     const mutatedImporters = [] as MutatedProject[]
-    await Promise.all(importers.map(async ({ buildIndex, rootDir }) => {
+    await Promise.all(importers.map(async ({ buildIndex, rootDir, preferredVersions }) => {
       const localConfig = await memReadLocalConfig(rootDir)
       const modulesDir = localConfig.modulesDir ?? opts.modulesDir
       const { manifest, writeProjectManifest } = manifestsByPath[rootDir]
@@ -259,6 +262,7 @@ export default async function recursive (
           modulesDir,
           mutation,
           rootDir,
+          preferredVersions,
         } as MutatedProject)
       }
     }))

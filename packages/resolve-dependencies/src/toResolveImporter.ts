@@ -21,6 +21,8 @@ export default async function toResolveImporter (
   },
   project: ImporterToResolve
 ) {
+  // opts.preferredVersions = project.preferredVersions
+
   const allDeps = getWantedDependencies(project.manifest)
   const nonLinkedDependencies = await partitionLinkedPackages(allDeps, {
     lockfileOnly: opts.lockfileOnly,
@@ -61,7 +63,8 @@ export default async function toResolveImporter (
   return {
     ...project,
     hasRemovedDependencies: Boolean(project.removePackages?.length),
-    preferredVersions: opts.preferredVersions ?? (project.manifest && getPreferredVersionsFromPackage(project.manifest)) ?? {},
+    // @ts-expect-error
+    preferredVersions: project.preferredVersions,
     wantedDependencies,
   }
 }
